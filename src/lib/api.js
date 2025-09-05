@@ -1,3 +1,4 @@
+// lib/api.js
 const base = process.env.NEXT_PUBLIC_API_URL || '';
 const prefix = process.env.NEXT_PUBLIC_API_URL ? '' : '/api';
 
@@ -8,7 +9,7 @@ export async function apiGet(path, opts = {}) {
     credentials: 'include',
     cache: 'no-store',
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) throw new Error(await res.text().catch(()=> 'Request failed'));
   return res.json();
 }
 
@@ -19,6 +20,6 @@ export async function apiPost(path, body, opts = {}) {
     credentials: 'include',
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) throw new Error(await res.text().catch(()=> 'Request failed'));
   return res.json();
 }

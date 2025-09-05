@@ -3,12 +3,20 @@ import { useEffect, useState } from 'react';
 import { apiGet } from '@/lib/api';
 
 export default function UsersPage() {
-  const [data, setData] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [err, setErr] = useState('');
+
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
-    apiGet('/users', { headers: token ? { Authorization: `Bearer ${token}` } : {} })
-      .then(setData)
-      .catch(console.error);
+    apiGet('/users')
+      .then(setUsers)
+      .catch((e) => setErr(e.message));
   }, []);
-  return <pre>{JSON.stringify(data, null, 2)}</pre>;
+
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>Users</h1>
+      {err && <p style={{ color: 'red' }}>{err}</p>}
+      <pre>{JSON.stringify(users, null, 2)}</pre>
+    </main>
+  );
 }
