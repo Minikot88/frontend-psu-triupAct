@@ -3,18 +3,23 @@
 import React from "react";
 import SidebarLayout from "@/components/SidebarLayout";
 import RequireAuth from "@/components/RequireAuth";
+import LogoutButton from "@/components/LogoutButton";
 
 export default function DashboardPage() {
   return (
     <SidebarLayout>
-        
-      {/* Header */}
+      
+      <RequireAuth/>
+
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-black">ภาพรวมระบบ</h1>
           <p className="mt-1 text-sm text-black/60">
             สรุปสั้นๆ ของการใช้งานและสถานะระบบ
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <LogoutButton />
         </div>
       </header>
 
@@ -28,6 +33,7 @@ export default function DashboardPage() {
 
       {/* Main grid */}
       <section className="grid gap-6 lg:grid-cols-3">
+        {/* Traffic + Signups */}
         <Card className="lg:col-span-2">
           <CardHeader
             title="ทราฟฟิก 7 วันล่าสุด"
@@ -50,6 +56,7 @@ export default function DashboardPage() {
           </div>
         </Card>
 
+        {/* Right column: Top pages + Status */}
         <div className="grid gap-6">
           <Card>
             <CardHeader title="หน้า/เส้นทางยอดนิยม" subtitle="Top 5" />
@@ -94,6 +101,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
+        {/* Quick tasks + feed */}
         <Card className="lg:col-span-2">
           <CardHeader title="งานด่วน" subtitle="Quick actions" />
           <div className="mt-3 flex flex-wrap gap-2">
