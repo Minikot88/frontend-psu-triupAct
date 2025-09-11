@@ -8,8 +8,7 @@ import LogoutButton from "@/components/LogoutButton";
 export default function DashboardPage() {
   return (
     <SidebarLayout>
-      
-      <RequireAuth/>
+    
 
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
