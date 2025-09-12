@@ -70,7 +70,7 @@ export default function SidebarLayout({ children }) {
   /* เมนูด้านข้าง */
   const links = useMemo(() => ([
     { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
-    { href: "/",         label: "Home",     icon: House },
+    { href: "/home",         label: "Home",     icon: House },
     { href: "/01",       label: "ฟอร์ม 01", icon: ClipboardList },
     { href: "/02",       label: "ฟอร์ม 02", icon: ClipboardList },
     { href: "/03",       label: "ฟอร์ม 03", icon: ClipboardList },
@@ -191,7 +191,7 @@ export default function SidebarLayout({ children }) {
           <div className="w-8" />
         </header>
 
-        <main className="mx-auto w-full max-w-7xl p-6">{children}</main>
+        <main className="mx-auto">{children}</main>
       </div>
     </div>
   );
