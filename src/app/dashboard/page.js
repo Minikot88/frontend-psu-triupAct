@@ -4,6 +4,13 @@ import SidebarLayout from "@/components/SidebarLayout";
 import KPICard from "@/components/KPICard";
 import DepartmentsTable from "@/components/api/DepartmentsTable";
 import AddressTable from "@/components/api/AddressTable";
+import CofundersTable from "@/components/api/CofundersTable";
+import EducationlevelsTable from "@/components/api/Educationlevels";
+import FindingdetaillistsTable from "@/components/api/FindingdetaillistsTable";
+import FormAllocateTable from "@/components/api/FormAllocateTable";
+import FormExtendTable from "@/components/api/FormExtendTable";
+import FormNewFindingsTable from "@/components/api/FormNewFindingsTable";
+import FormResearchOwnerTable from "@/components/api/FormResearchOwnerTable";
 
 export default function DashboardPage() {
   return (
@@ -42,6 +49,36 @@ export default function DashboardPage() {
           <div className="mb-6 md:mb-4">
             <AddressTable />
           </div>
+
+          <div className="mb-6 md:mb-4">
+            <CofundersTable />
+          </div>
+
+          <div className="mb-6 md:mb-4">
+            <EducationlevelsTable />
+          </div>
+
+          <div className="mb-6 md:mb-4">
+            <FindingdetaillistsTable />
+          </div>
+
+          <div className="mb-6 md:mb-4">
+            <FormAllocateTable />
+          </div>
+
+            <div className="mb-6 md:mb-4">
+            <FormExtendTable />
+          </div>
+
+
+   <div className="mb-6 md:mb-4">
+            <FormNewFindingsTable />
+          </div>
+
+  <div className="mb-6 md:mb-4">
+            <FormResearchOwnerTable />
+          </div>
+
         </section>
       </main>
     </SidebarLayout>

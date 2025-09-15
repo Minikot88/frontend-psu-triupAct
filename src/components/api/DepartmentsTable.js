@@ -126,7 +126,7 @@ export default function DepartmentsTable() {
                   }}
                   className="rounded-xl border border-black/15 bg-white px-2 py-1.5 text-sm outline-none"
                 >
-                  {[5, 10, 20, 50, 100].map((n) => (
+                  {[3, 5, 10, 20, 50, 100].map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>

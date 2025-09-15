@@ -1,3 +1,4 @@
+// app/(your-page)/CofundersTable.jsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -5,31 +6,31 @@ import Card from "@/components/Card";
 import CardHeader from "@/components/CardHeader";
 import { apiGet } from "@/lib/api";
 
-export default function AddressTable() {
+export default function CofundersTable() {
   // ---- state หลัก
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
   // ---- state UI
-  const [q, setQ] = useState(""); // คำค้นหา
-  const [sort, setSort] = useState("name-asc"); // name-asc | name-desc | id-asc | id-desc
-  const [page, setPage] = useState(1); // หน้าปัจจุบัน
-  const [size, setSize] = useState(3); // จำนวนรายการต่อหน้า
+  const [q, setQ] = useState("");                 // คำค้นหา
+  const [sort, setSort] = useState("name-asc");   // name-asc | name-desc | id-asc | id-desc
+  const [page, setPage] = useState(1);            // หน้าปัจจุบัน
+  const [size, setSize] = useState(3);            // จำนวนต่อหน้า
   const [showTable, setShowTable] = useState(true);
 
-  // ---- โหลดข้อมูลจังหวัด
+  // ---- โหลดข้อมูล cofunders
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    apiGet("/api/address")
+    apiGet("/api/cofunders")
       .then((data) => {
         if (!alive) return;
         const list = Array.isArray(data) ? data : data?.data || [];
-        // normalize ให้ได้ { id, name } เสมอ
+        // normalize -> ให้เป็น { id, name } เสมอ
         const normalized = list.map((d, i) => ({
-          id: d.id ?? d.code ?? i + 1,
-          name: d.name ?? d.provinceName ?? d.title ?? "-", // กันกรณีชื่อฟิลด์ต่างกัน
+          id: d.id ?? i + 1,
+          name: d.name ?? d.title ?? "-",
         }));
         setRows(normalized);
       })
@@ -46,31 +47,23 @@ export default function AddressTable() {
 
     let out = rows.filter((r) => {
       if (!term) return true;
-      const nameHit = String(r.name ?? "")
-        .toLowerCase()
-        .includes(term);
-      const idHit = String(r.id ?? "")
-        .toLowerCase()
-        .includes(term);
+      const nameHit = String(r.name ?? "").toLowerCase().includes(term);
+      const idHit = String(r.id ?? "").toLowerCase().includes(term);
       return nameHit || idHit;
     });
 
     out.sort((a, b) => {
       if (sort.startsWith("name")) {
-        const cmp = String(a.name ?? "").localeCompare(
-          String(b.name ?? ""),
-          "th"
-        );
+        const cmp = String(a.name ?? "").localeCompare(String(b.name ?? ""), "th");
         return sort === "name-asc" ? cmp : -cmp;
       } else if (sort.startsWith("id")) {
         const numA = Number(a.id);
         const numB = Number(b.id);
         if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
           return sort === "id-asc" ? numA - numB : numB - numA;
-        } else {
-          const cmp = String(a.id ?? "").localeCompare(String(b.id ?? ""));
-          return sort === "id-asc" ? cmp : -cmp;
         }
+        const cmp = String(a.id ?? "").localeCompare(String(b.id ?? ""));
+        return sort === "id-asc" ? cmp : -cmp;
       }
       return 0;
     });
@@ -79,8 +72,8 @@ export default function AddressTable() {
   }, [rows, q, sort]);
 
   // ---- pagination
-  const total = filtered.length; // จำนวนหลังกรอง
-  const rawTotal = rows.length; // จำนวนทั้งหมดจาก API
+  const total = filtered.length;        // จำนวนหลังกรอง
+  const rawTotal = rows.length;         // จำนวนทั้งหมดจาก API
   const pages = Math.max(1, Math.ceil(total / size));
   const startIdx = (page - 1) * size;
   const pageRows = filtered.slice(startIdx, startIdx + size);
@@ -97,7 +90,7 @@ export default function AddressTable() {
   return (
     <Card>
       <CardHeader
-        title="ตารางจังหวัด /address.controller"
+        title="ตารางผู้ร่วมทุน /cofunders.controller"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />
@@ -113,7 +106,7 @@ export default function AddressTable() {
                   setQ(e.target.value);
                   setPage(1);
                 }}
-                placeholder="ค้นหาชื่อจังหวัด หรือรหัสจังหวัด…"
+                placeholder="ค้นหาชื่อผู้ร่วมทุน หรือรหัส…"
                 className="w-72 rounded-xl border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-black/30"
               />
 
@@ -122,10 +115,10 @@ export default function AddressTable() {
                 onChange={(e) => setSort(e.target.value)}
                 className="rounded-xl border border-black/15 bg-white px-3 py-2 text-sm outline-none"
               >
-                <option value="name-asc">ชื่อจังหวัด (A→Z)</option>
-                <option value="name-desc">ชื่อจังหวัด (Z→A)</option>
-                <option value="id-asc">รหัสจังหวัด (1→99)</option>
-                <option value="id-desc">รหัสจังหวัด (99→1)</option>
+                <option value="name-asc">ชื่อ (A→Z)</option>
+                <option value="name-desc">ชื่อ (Z→A)</option>
+                <option value="id-asc">รหัส (1→99)</option>
+                <option value="id-desc">รหัส (99→1)</option>
               </select>
 
               <div className="flex items-center gap-2">
@@ -138,7 +131,7 @@ export default function AddressTable() {
                   }}
                   className="rounded-xl border border-black/15 bg-white px-2 py-1.5 text-sm outline-none"
                 >
-                  {[3, 5, 10, 20, 50, 100].map((n) => (
+                  {[3, 5,].map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
@@ -165,8 +158,8 @@ export default function AddressTable() {
                 <thead>
                   <tr className="bg-black/[.03] text-left text-black/60">
                     <th className="px-4 py-2 font-medium">#</th>
-                    <th className="px-4 py-2 font-medium">รหัสจังหวัด</th>
-                    <th className="px-4 py-2 font-medium">ชื่อจังหวัด</th>
+                    <th className="px-4 py-2 font-medium">รหัส</th>
+                    <th className="px-4 py-2 font-medium">ชื่อผู้ร่วมทุน</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/10">
