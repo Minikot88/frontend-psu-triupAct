@@ -2,7 +2,7 @@
 
 import SidebarLayout from "@/components/SidebarLayout";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Building2,
   Trophy,
@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 export default function Home() {
-  // (แนะนำ) ตรวจเส้นทางให้ถูกต้องและไม่ซ้ำ
   const menus = [
     { title: "ตารางแผนก", path: "/departments", icon: Building2, desc: "ดูและค้นหาแผนกทั้งหมด" },
     { title: "ตารางรางวัล", path: "/awards", icon: Trophy, desc: "ติดตามรายการรางวัล (อ่านอย่างเดียว)" },
@@ -26,81 +25,60 @@ export default function Home() {
     { title: "เกี่ยวกับ/ติดต่อ", path: "/about", icon: Info, desc: "รายละเอียดระบบและข้อมูลติดต่อ" },
   ];
 
+  const prefersReduced = useReducedMotion();
   const container = {
     hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { when: "beforeChildren", staggerChildren: 0.08 } },
+    show: {
+      opacity: 1,
+      transition: prefersReduced ? {} : { when: "beforeChildren", staggerChildren: 0.06 },
+    },
   };
   const item = {
-    hidden: { opacity: 0, y: 10 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+    hidden: { opacity: 0, y: prefersReduced ? 0 : 8 },
+    show: { opacity: 1, y: 0, transition: prefersReduced ? {} : { duration: 0.3, ease: "easeOut" } },
   };
 
   return (
     <SidebarLayout>
-      {/* overflow-x-hidden ป้องกันเลื่อนข้างบนมือถือ */}
-      <main className="relative min-h-screen p-6 sm:p-10 overflow-x-hidden">
-        {/* พื้นหลังมินิมอล: ครอบด้วย overflow-hidden กันล้นแนวนอน */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute left-1/2 top-24 h-64 w-64 -translate-x-1/2 rounded-full bg-blue-100/60 blur-3xl" />
-          <div className="absolute right-12 bottom-24 h-56 w-56 rounded-full bg-indigo-100/60 blur-3xl" />
+      <main className="relative mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* พื้นหลังแบบโมโนโครม */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute left-1/2 top-28 h-56 w-56 -translate-x-1/2 rounded-full bg-gray-100 blur-3xl" />
+          <div className="absolute right-10 bottom-28 h-48 w-48 rounded-full bg-gray-200 blur-3xl" />
         </div>
 
-        <motion.section
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="mx-auto max-w-6xl"
-        >
+        <motion.section variants={container} initial="hidden" animate="show" className="space-y-8">
           {/* HERO */}
           <motion.div
             variants={item}
-            className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white/90 shadow-sm"
+            className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white/95 shadow-sm"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-blue-50" />
-            <div className="relative grid gap-6 p-8 sm:grid-cols-2 sm:items-center sm:p-10">
+            <div className="relative grid gap-6 p-6 sm:p-8 sm:grid-cols-2 sm:items-center">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold tracking-tight text-black">
                   PSUTriupAct — ระบบสารสนเทศ PSU
                 </h1>
-                <p className="mt-3 text-gray-600">
-                  เว็บไซต์นี้เป็น <span className="font-medium">หน้าจอแสดงผล (Read-only)</span>{" "}
-                  สำหรับข้อมูลแผนก รางวัล นักวิจัย และส่วนงานอื่น ๆ ในระบบเดียว
+                <p className="mt-2 text-gray-600">
+                  ระบบนี้เป็น <span className="font-medium">Read-only</span> สำหรับข้อมูลแผนก รางวัล
+                  นักวิจัย และส่วนงานที่เกี่ยวข้อง
                 </p>
-                <div className="mt-5 flex gap-3">
-                  <Link
-                    href="/departments"
-                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-white shadow-sm transition hover:bg-blue-700"
-                  >
-                    เริ่มต้นใช้งาน <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    href="/about"
-                    className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-gray-700 shadow-sm transition hover:border-gray-300"
-                  >
-                    เกี่ยวกับระบบ
-                  </Link>
-                </div>
+              
               </div>
 
-              {/* แถบจุดเด่น */}
-              <div className="rounded-xl border border-gray-100 bg-white/80 p-5 shadow-sm">
-                <dl className="grid grid-cols-2 gap-4 text-center">
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <dt className="text-xs text-gray-500">Access</dt>
-                    <dd className="mt-1 text-lg font-semibold text-gray-900">Read-only</dd>
-                  </div>
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <dt className="text-xs text-gray-500">Security</dt>
-                    <dd className="mt-1 text-lg font-semibold text-gray-900">Role-based</dd>
-                  </div>
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <dt className="text-xs text-gray-500">Speed</dt>
-                    <dd className="mt-1 text-lg font-semibold text-gray-900">Fast Query</dd>
-                  </div>
-                  <div className="rounded-lg bg-gray-50 p-4">
-                    <dt className="text-xs text-gray-500">Scope</dt>
-                    <dd className="mt-1 text-lg font-semibold text-gray-900">7 ฟอร์มข้อมูล</dd>
-                  </div>
+              {/* จุดเด่น */}
+              <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+                <dl className="grid grid-cols-2 gap-3 text-center">
+                  {[
+                    ["Access", "Read-only"],
+                    ["Security", "Role-based"],
+                    ["Speed", "Fast Query"],
+                    ["Scope", "7 ฟอร์มข้อมูล"],
+                  ].map(([k, v]) => (
+                    <div key={k} className="rounded-lg bg-gray-50 p-3">
+                      <dt className="text-[11px] uppercase tracking-wide text-gray-500">{k}</dt>
+                      <dd className="mt-1 text-base font-semibold text-black">{v}</dd>
+                    </div>
+                  ))}
                 </dl>
               </div>
             </div>
@@ -109,7 +87,7 @@ export default function Home() {
           {/* MENUS */}
           <motion.ul
             variants={container}
-            className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
           >
             {menus.map(({ title, path, icon: Icon, desc }) => (
               <motion.li key={path} variants={item} className="h-full">
@@ -123,20 +101,15 @@ export default function Home() {
                     "
                   >
                     <div className="flex items-start gap-3">
-                      <div className="rounded-xl bg-blue-50 p-2.5 ring-1 ring-blue-100 transition group-hover:bg-blue-100">
-                        <Icon className="h-5 w-5 text-blue-600" />
+                      <div className="rounded-xl bg-gray-100 p-2.5 ring-1 ring-gray-200 transition group-hover:bg-gray-200">
+                        <Icon className="h-5 w-5 text-black" />
                       </div>
-                      <div className="min-w-0 break-words">
-                        <h3 className="truncate text-base font-semibold text-gray-900">
-                          {title}
-                        </h3>
-                        <p className="mt-1 line-clamp-2 text-sm text-gray-500">
-                          {desc}
-                        </p>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-base font-semibold text-black">{title}</h3>
+                        <p className="mt-1 line-clamp-2 text-sm text-gray-600">{desc}</p>
                       </div>
                     </div>
-
-                    <span className="pointer-events-none absolute bottom-0 left-0 h-0.5 w-0 bg-blue-600/70 transition-all duration-300 group-hover:w-full" />
+                    <span className="pointer-events-none absolute bottom-0 left-0 h-0.5 w-0 bg-black/70 transition-all duration-300 group-hover:w-full" />
                   </div>
                 </Link>
               </motion.li>
@@ -144,7 +117,7 @@ export default function Home() {
           </motion.ul>
 
           {/* FOOTER */}
-          <motion.footer variants={item} className="mt-10 text-center text-xs text-gray-400">
+          <motion.footer variants={item} className="pt-4 text-center text-xs text-gray-500">
             © {new Date().getFullYear()} Prince of Songkla University
           </motion.footer>
         </motion.section>

@@ -187,7 +187,7 @@ export default function SidebarLayout({ children }) {
           >
             <BurgerIcon className="h-5 w-5" />
           </button>
-          <span className="font-semibold">PSU</span>
+          <span className="font-semibold">PSU Triup Act </span>
           <div className="w-8" />
         </header>
 
