@@ -88,7 +88,7 @@ export default function FindingdetaillistsTable() {
   return (
     <Card>
       <CardHeader
-        title="ตารางรายการเผยแพร่ผล /findingdetaillists.controller"
+        title="ตารางรายการเผยแพร่ผล /api/findingdetaillists"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />

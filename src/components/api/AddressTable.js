@@ -97,7 +97,7 @@ export default function AddressTable() {
   return (
     <Card>
       <CardHeader
-        title="ตารางจังหวัด /address.controller"
+        title="ตารางจังหวัด /api/address"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />

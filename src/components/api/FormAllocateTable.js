@@ -114,7 +114,7 @@ export default function FormAllocateTable() {
   return (
     <Card>
       <CardHeader
-        title="ตารางรอบการจัดสรร (Form Allocate) /form_allocate.controller"
+        title="ตารางรอบการจัดสรร /api/form_allocate"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />

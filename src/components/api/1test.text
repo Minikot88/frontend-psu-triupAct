@@ -1,0 +1,184 @@
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import Card from "@/components/Card";
+import CardHeader from "@/components/CardHeader";
+import { apiGet } from "@/lib/api"; // ต้องมีฟังก์ชันนี้
+
+export default function FormResearchPlanTable() {
+  const [data, setData] = useState(null);   // เก็บ object/array ที่ได้จาก API
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    apiGet("/api/form_research_plan")
+      .then(async (res) => {
+        if (!alive) return;
+        // รองรับทั้งรูปแบบ {success:false,...}, {data: {...}}, หรือ object ตรงๆ
+        if (res?.success === false) {
+          throw new Error(res?.error || "fetch failed");
+        }
+        const value = res?.data ?? res;
+        setData(value);
+      })
+      .catch((e) => alive && setErr(e.message || "fetch failed"))
+      .finally(() => alive && setLoading(false));
+    return () => { alive = false; };
+  }, []);
+
+  // ----- Helpers -----
+  const isArray = Array.isArray(data);
+  const items = useMemo(() => (isArray ? data : data ? [data] : []), [data]);
+
+  // ปกติ endpoint นี้คาดว่าจะได้ 1 รายการ ถ้าเผื่อเป็นหลายรายการ จะแสดงเป็น list
+  const total = items.length;
+
+  // แปลงค่าให้พร้อมแสดง (ป้องกัน null/undefined)
+  const fmt = (v, dash = "-") => (v === null || v === undefined || v === "" ? dash : v);
+
+  // แสดง Objective / Period (เป็นอาร์เรย์ซ้อน)
+  const renderMatrix = (matrix, bullet = "•") => {
+    if (!Array.isArray(matrix)) return <div className="text-black/60">-</div>;
+    return (
+      <div className="space-y-3">
+        {matrix.map((group, gi) => (
+          <ul key={gi} className="list-disc pl-6">
+            {Array.isArray(group) &&
+              group.map((line, li) => (
+                <li key={li} className="text-sm text-black/80">
+                  {line?.toString?.() || `${bullet} -`}
+                </li>
+              ))}
+          </ul>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader
+        title="ข้อมูลแบบฟอร์มแผนวิจัย /api/form_research_plan"
+        onToggle={() => setShow(!show)}
+        isOpen={show}
+      />
+
+      {show && (
+        <>
+          {/* States */}
+          {loading && <div className="mt-3 text-sm text-black/60">กำลังโหลด…</div>}
+          {err && <div className="mt-3 text-sm text-red-600">{err}</div>}
+          {!loading && !err && total === 0 && (
+            <div className="mt-3 text-sm text-black/60">ไม่พบข้อมูล</div>
+          )}
+
+          {/* Summary line (ถ้ามีหลายรายการ) */}
+          {!loading && !err && total > 1 && (
+            <div className="mt-3 text-sm text-black/60">พบทั้งหมด {total} รายการ</div>
+          )}
+
+          {/* Content */}
+          {!loading && !err && total > 0 && (
+            <div className="mt-4 space-y-6">
+              {items.map((it, idx) => (
+                <div
+                  key={it?.form_plan_id ?? idx}
+                  className="rounded-xl border border-black/10 bg-white p-4"
+                >
+                  {total > 1 && (
+                    <div className="mb-3 text-xs text-black/50">รายการที่ {idx + 1}</div>
+                  )}
+
+                  {/* Header info */}
+                  <div className="mb-4">
+                    <div className="text-base font-semibold">
+                      {fmt(it?.form_plan_code)} {/** เช่น 2567/0074/UP01 */}
+                    </div>
+                    <div className="text-sm text-black/60">
+                      สถานะ: {fmt(it?.form_plan_status)}
+                    </div>
+                  </div>
+
+                  {/* Grid fields */}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Field label="ชื่อ (เต็ม)">
+                      {fmt(it?.fullname, `${fmt(it?.form_plan_fullname, "")} ${fmt(it?.form_plan_lastname, "")}`.trim() || "-")}
+                    </Field>
+                    <Field label="สังกัด/หน่วยงาน">{fmt(it?.form_plan_department)}</Field>
+
+                    <Field label="ตำแหน่ง">{fmt(it?.form_plan_position)}</Field>
+                    <Field label="อีเมล">{fmt(it?.form_plan_email)}</Field>
+
+                    <Field label="เบอร์โทร">{fmt(it?.form_plan_tel)}</Field>
+                    <Field label="ระยะเวลาโครงการ (เดือน)">{fmt(it?.form_plan_period)}</Field>
+
+                    <Field label="วันเริ่มต้น">{fmt(it?.form_plan_start_date)}</Field>
+                    <Field label="งบประมาณรวม">{fmt(it?.form_plan_usage_value)}</Field>
+
+                    <Field label="กลุ่มเป้าหมาย">{fmt(it?.form_plan_target)}</Field>
+                    <Field label="ผู้ใช้ประโยชน์">{fmt(it?.form_plan_user_target)}</Field>
+
+                    <Field label="ผลลัพธ์เป้าหมาย">{fmt(it?.form_plan_result)}</Field>
+                    <Field label="ผู้ใช้ผลลัพธ์">{fmt(it?.form_plan_user_result)}</Field>
+
+                    <Field label="ประเภทสถานะโครงการ" className="sm:col-span-2">
+                      {fmt(it?.form_plan_type_status)}
+                    </Field>
+                  </div>
+
+                  {/* Objective */}
+                  <Section title="วัตถุประสงค์ / รูปแบบ / กลไกการใช้ประโยชน์">
+                    {renderMatrix(it?.objective)}
+                  </Section>
+
+                  {/* Period (ช่วงเวลา/กิจกรรม/ผลที่คาด) */}
+                  <Section title="แผนดำเนินงานเป็นช่วงระยะเวลา (Period)">
+                    {renderMatrix(it?.period)}
+                  </Section>
+
+                  {/* Meta */}
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <Field label="ตรวจสอบโดย">{fmt(it?.form_plan_checked_by)}</Field>
+                    <Field label="วันที่ตรวจสอบ">{fmt(it?.form_plan_checked_date)}</Field>
+                    <Field label="อัปเดตล่าสุด">{fmt(it?.form_plan_updated_at)}</Field>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </Card>
+  );
+}
+
+/** ---------- Sub Components ---------- */
+
+function Field({ label, children, className = "" }) {
+  return (
+    <div className={className}>
+      <div className="text-xs uppercase tracking-wide text-black/50">{label}</div>
+      <div className="mt-0.5 text-sm text-black">{children}</div>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div className="mt-5">
+      <div className="mb-2 text-sm font-semibold">{title}</div>
+      <div className="rounded-lg border border-black/10 bg-white/70 p-3">{children}</div>
+    </div>
+  );
+}
+
+
+
+
+
+
+

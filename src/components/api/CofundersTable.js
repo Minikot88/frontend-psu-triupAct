@@ -90,7 +90,7 @@ export default function CofundersTable() {
   return (
     <Card>
       <CardHeader
-        title="ตารางผู้ร่วมทุน /cofunders.controller"
+        title="ตารางผู้ร่วมทุน /api/cofunders"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />

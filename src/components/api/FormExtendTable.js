@@ -132,7 +132,7 @@ export default function FormExtendTable() {
   return (
     <Card>
       <CardHeader
-        title="ตารางขยายระยะเวลา (Form Extend) /form_extend.controller"
+        title="ตารางขยายระยะเวลา /api/form_extend"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />

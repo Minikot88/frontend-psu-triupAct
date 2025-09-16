@@ -115,7 +115,7 @@ export default function FormNewFindingsTable() {
   return (
     <Card>
       <CardHeader
-        title="ตารางคำขอประกาศผลใหม่ (Form New Findings) /form_new_findings.controller"
+        title="ตารางคำขอประกาศผลใหม่ /api/form_new_findings"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />

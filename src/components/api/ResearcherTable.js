@@ -1,68 +1,94 @@
-// app/(your-page)/EducationlevelsTable.jsx
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Fragment } from "react";
 import Card from "@/components/Card";
 import CardHeader from "@/components/CardHeader";
-import { apiGet } from "@/lib/api";
+import { apiGet } from "@/lib/api"; // ต้องมีฟังก์ชันนี้
 
-export default function EducationlevelsTable() {
-  // ---- state หลัก
+export default function ResearcherTable() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // ---- state UI
-  const [q, setQ] = useState("");                 // คำค้นหา
-  const [sort, setSort] = useState("title-asc");  // title-asc | title-desc | id-asc | id-desc
-  const [page, setPage] = useState(1);            // หน้าปัจจุบัน
-  const [size, setSize] = useState(3);            // จำนวนต่อหน้า
+  const [q, setQ] = useState("");            // คำค้นหา
+  const [sort, setSort] = useState("name-asc"); // ตัวเลือกเรียง
+  const [page, setPage] = useState(1);       // หน้าปัจจุบัน
+  const [size, setSize] = useState(3);      // แถวต่อหน้า
   const [showTable, setShowTable] = useState(true);
 
-  // ---- โหลดข้อมูล educationlevels
+  // โหลดข้อมูลจาก API
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    apiGet("/api/educationlevels")
+    setErr("");
+
+    apiGet("/api/researcher")
       .then((data) => {
         if (!alive) return;
+
+        // รองรับทั้งแบบ { data: [...] } และ [] ตรงๆ
         const list = Array.isArray(data) ? data : data?.data || [];
-        // normalize -> ให้เป็น { id, title } เสมอ
+
         const normalized = list.map((d, i) => ({
-          id: d.id ?? i + 1,
-          title: d.title ?? d.name ?? "-",
+          id: d?.user_id ?? i + 1,
+          userId: d?.user_id ?? null,
+          email: d?.email ?? "",
+          cardId: d?.card_id ?? "",
+          role: d?.default_role_id ?? "",
+          departmentId: d?.department_id ?? "",
+          fullname: d?.fullname ?? "-",
+          departmentName: d?.department_name ?? "-",
         }));
+
         setRows(normalized);
       })
-      .catch((e) => alive && setErr(e?.message || "fetch failed"))
-      .finally(() => alive && setLoading(false));
-    return () => { alive = false; };
+      .catch((e) => {
+        setErr(e?.message || "fetch failed");
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  // ---- filter + sort
+  // filter + sort
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
-
     let out = rows.filter((r) => {
       if (!term) return true;
-      const titleHit = String(r.title ?? "").toLowerCase().includes(term);
-      const idHit = String(r.id ?? "").toLowerCase().includes(term);
-      return titleHit || idHit;
+      return (
+        String(r.fullname ?? "").toLowerCase().includes(term) ||
+        String(r.departmentName ?? "").toLowerCase().includes(term) ||
+        String(r.email ?? "").toLowerCase().includes(term) ||
+        String(r.cardId ?? "").toLowerCase().includes(term) ||
+        String(r.role ?? "").toLowerCase().includes(term)
+      );
     });
 
     out.sort((a, b) => {
-      if (sort.startsWith("title")) {
-        const cmp = String(a.title ?? "").localeCompare(String(b.title ?? ""), "th");
-        return sort === "title-asc" ? cmp : -cmp;
+      if (sort.startsWith("name")) {
+        const cmp = String(a.fullname ?? "").localeCompare(
+          String(b.fullname ?? ""),
+          "th"
+        );
+        return sort === "name-asc" ? cmp : -cmp;
+      } else if (sort.startsWith("dept")) {
+        const cmp = String(a.departmentName ?? "").localeCompare(
+          String(b.departmentName ?? ""),
+          "th"
+        );
+        return sort === "dept-asc" ? cmp : -cmp;
       } else if (sort.startsWith("id")) {
-        const numA = Number(a.id);
-        const numB = Number(b.id);
-        if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
-          return sort === "id-asc" ? numA - numB : numB - numA;
-        } else {
-          const cmp = String(a.id ?? "").localeCompare(String(b.id ?? ""));
-          return sort === "id-asc" ? cmp : -cmp;
+        const na = Number(a.userId);
+        const nb = Number(b.userId);
+        if (!isNaN(na) && !isNaN(nb)) {
+          return sort === "id-asc" ? na - nb : nb - na;
         }
+        const cmp = String(a.userId ?? "").localeCompare(String(b.userId ?? ""), "th", { numeric: true });
+        return sort === "id-asc" ? cmp : -cmp;
       }
       return 0;
     });
@@ -70,26 +96,34 @@ export default function EducationlevelsTable() {
     return out;
   }, [rows, q, sort]);
 
-  // ---- pagination
-  const total = filtered.length;        // จำนวนหลังกรอง
-  const rawTotal = rows.length;         // จำนวนทั้งหมดจาก API
+  // pagination
+  const total = filtered.length;
+  const rawTotal = rows.length;
   const pages = Math.max(1, Math.ceil(total / size));
   const startIdx = (page - 1) * size;
   const pageRows = filtered.slice(startIdx, startIdx + size);
   const viewStart = total === 0 ? 0 : startIdx + 1;
   const viewEnd = startIdx + pageRows.length;
 
-  // ถ้าหน้าปัจจุบันเกินจำนวนหน้าจริง ให้เด้งกลับหน้า 1
   useEffect(() => {
     if (page > pages) setPage(1);
   }, [pages, page]);
 
   const goTo = (p) => setPage(Math.min(Math.max(1, p), pages));
 
+  // mask เลขบัตรแบบง่าย ๆ (โชว์ต้น-ท้าย)
+  const maskCard = (v) => {
+    if (!v) return "-";
+    const s = String(v);
+    if (s.length <= 4) return "****";
+    return s.slice(0, 2) + "****" + s.slice(-2);
+    // ปรับรูปแบบได้ตามนโยบายข้อมูลส่วนบุคคลของโปรเจกต์
+  };
+
   return (
     <Card>
       <CardHeader
-        title="ตารางระดับการศึกษา/api/educationlevels"
+        title="ตารางนักวิจัย /api/researcher"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />
@@ -105,8 +139,8 @@ export default function EducationlevelsTable() {
                   setQ(e.target.value);
                   setPage(1);
                 }}
-                placeholder="ค้นหาระดับการศึกษา หรือรหัส…"
-                className="w-72 rounded-xl border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-black/30"
+                placeholder="ค้นหา ชื่อ/หน่วยงาน/อีเมล/เลขบัตร/บทบาท…"
+                className="w-96 rounded-xl border border-black/15 bg-white px-3 py-2 text-sm outline-none focus:border-black/30"
               />
 
               <select
@@ -114,14 +148,16 @@ export default function EducationlevelsTable() {
                 onChange={(e) => setSort(e.target.value)}
                 className="rounded-xl border border-black/15 bg-white px-3 py-2 text-sm outline-none"
               >
-                <option value="title-asc">ระดับ (A→Z)</option>
-                <option value="title-desc">ระดับ (Z→A)</option>
-                <option value="id-asc">รหัส (1→99)</option>
-                <option value="id-desc">รหัส (99→1)</option>
+                <option value="name-asc">ชื่อ (A→Z)</option>
+                <option value="name-desc">ชื่อ (Z→A)</option>
+                <option value="dept-asc">หน่วยงาน (A→Z)</option>
+                <option value="dept-desc">หน่วยงาน (Z→A)</option>
+                <option value="id-asc">User ID (น้อย→มาก)</option>
+                <option value="id-desc">User ID (มาก→น้อย)</option>
               </select>
 
               <div className="flex items-center gap-2">
-                <label className="text-sm text-black/60">ต่อหน้า</label>
+                <label className="text-sm text-black/60">แถวต่อหน้า</label>
                 <select
                   value={size}
                   onChange={(e) => {
@@ -130,7 +166,7 @@ export default function EducationlevelsTable() {
                   }}
                   className="rounded-xl border border-black/15 bg-white px-2 py-1.5 text-sm outline-none"
                 >
-                  {[3, 5,].map((n) => (
+                  {[3, 10, 20, 50, 100].map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
@@ -141,10 +177,10 @@ export default function EducationlevelsTable() {
 
             {/* Summary */}
             <div className="text-sm text-black/60">
-              แสดง {viewStart}-{viewEnd} จาก {total} ข้อมูล
+              แสดง {viewStart}-{viewEnd} จาก {total} รายการ
               {q.trim() ? (
                 <span className="ml-2 text-black/40">
-                  (ทั้งหมด {rawTotal} ข้อมูลก่อนกรอง)
+                  (ทั้งหมด {rawTotal} ก่อนกรอง)
                 </span>
               ) : null}
             </div>
@@ -157,21 +193,34 @@ export default function EducationlevelsTable() {
                 <thead>
                   <tr className="bg-black/[.03] text-left text-black/60">
                     <th className="px-4 py-2 font-medium">#</th>
-                    <th className="px-4 py-2 font-medium">รหัส</th>
-                    <th className="px-4 py-2 font-medium">ระดับการศึกษา</th>
+                    <th className="px-4 py-2 font-medium">User&nbsp;ID</th>
+                    <th className="px-4 py-2 font-medium">ชื่อ–สกุล</th>
+                    <th className="px-4 py-2 font-medium">หน่วยงาน</th>
+                    <th className="px-4 py-2 font-medium">อีเมล</th>
+                    <th className="px-4 py-2 font-medium">เลขบัตร</th>
+                    <th className="px-4 py-2 font-medium">บทบาท</th>
+                    <th className="px-4 py-2 font-medium">Dept&nbsp;ID</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/10">
                   {pageRows.map((r, i) => (
-                    <tr
-                      key={r.id ?? `${startIdx + i}`}
-                      className="hover:bg-black/[.02]"
-                    >
-                      <td className="px-4 py-2 text-black/70">
-                        {startIdx + i + 1}
+                    <tr key={r.id ?? `${startIdx + i}`} className="hover:bg-black/[.02]">
+                      <td className="px-4 py-2 text-black/70">{startIdx + i + 1}</td>
+                      <td className="px-4 py-2 font-mono">{r.userId ?? "-"}</td>
+                      <td className="px-4 py-2">{r.fullname || "-"}</td>
+                      <td className="px-4 py-2">{r.departmentName || "-"}</td>
+                      <td className="px-4 py-2">
+                        {r.email ? (
+                          <a href={`mailto:${r.email}`} className="text-blue-600 hover:underline">
+                            {r.email}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
                       </td>
-                      <td className="px-4 py-2 font-mono">{r.id ?? "-"}</td>
-                      <td className="px-4 py-2">{r.title ?? "-"}</td>
+                      <td className="px-4 py-2">{maskCard(r.cardId)}</td>
+                      <td className="px-4 py-2">{r.role || "-"}</td>
+                      <td className="px-4 py-2 text-right">{r.departmentId ?? "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -180,9 +229,7 @@ export default function EducationlevelsTable() {
           )}
 
           {/* States */}
-          {loading && (
-            <div className="mt-4 text-sm text-black/60">กำลังโหลด…</div>
-          )}
+          {loading && <div className="mt-4 text-sm text-black/60">กำลังโหลด…</div>}
           {err && <div className="mt-4 text-sm text-red-600">{err}</div>}
           {!loading && !err && total === 0 && (
             <div className="mt-4 text-sm text-black/60">ไม่พบข้อมูล</div>
@@ -213,9 +260,7 @@ export default function EducationlevelsTable() {
                 </button>
 
                 {Array.from({ length: pages }, (_, i) => i + 1)
-                  .filter(
-                    (p) => Math.abs(p - page) <= 2 || p === 1 || p === pages
-                  )
+                  .filter((p) => Math.abs(p - page) <= 2 || p === 1 || p === pages)
                   .reduce((acc, p, idx, arr) => {
                     if (idx > 0 && p - arr[idx - 1] > 1) acc.push("ellipsis-" + p);
                     acc.push(p);
@@ -236,7 +281,9 @@ export default function EducationlevelsTable() {
                         {p}
                       </button>
                     ) : (
-                      <span key={p} className="px-2 text-xs text-black/40">…</span>
+                      <span key={p} className="px-2 text-xs text-black/40">
+                        …
+                      </span>
                     )
                   )}
 

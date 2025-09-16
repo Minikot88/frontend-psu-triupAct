@@ -86,7 +86,7 @@ export default function DepartmentsTable() {
   return (
     <Card>
       <CardHeader
-        title="ตารางข้อมูลแผนก /departments.controller"
+        title="ตารางข้อมูลแผนก /api/departments"
         onToggle={() => setShowTable(!showTable)}
         isOpen={showTable}
       />
